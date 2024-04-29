@@ -16,6 +16,8 @@ WiFiClientSecure client;
 time_t now;
 tm tim;
 
+const uint8_t RelayPins[] = {14, 12};
+
 void makeHTTPRequest();
 
 void printTime(tm time) {
@@ -23,11 +25,18 @@ void printTime(tm time) {
                 time.tm_hour, time.tm_min, time.tm_sec);
 }
 
+void SwitchRelay(uint8_t x, boolean b) { digitalWrite(RelayPins[x], b); }
+
 time_t hours[24];
 float prices[24];
 
 void setup() {
   Serial.begin(115200);
+
+  for (uint8_t i = 0; i < sizeof(RelayPins); i++) {
+    pinMode(RelayPins[i], OUTPUT);
+    SwitchRelay(i, false);
+  }
 
   // Connect to the WiFI
   WiFi.mode(WIFI_STA);
@@ -152,6 +161,16 @@ void loop() {
   if (tim.tm_min == 0) {
     makeHTTPRequest();
   }
+
+  // Switch
+  bool on = false;
+  for (size_t i = 0; i < 5; i++) {
+    if (now > hours[i] && now < (hours[i] + 3600)) {
+      on = true;
+    }
+  }
+  SwitchRelay(0, on);
+  SwitchRelay(1, on);
 
   // wait 1 min
   delay(60 * 1000);
