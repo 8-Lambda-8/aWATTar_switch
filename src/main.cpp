@@ -23,7 +23,7 @@ void printTime(tm time) {
                 time.tm_hour, time.tm_min, time.tm_sec);
 }
 
-uint64_t hours[24];
+time_t hours[24];
 float prices[24];
 
 void setup() {
@@ -107,7 +107,7 @@ void makeHTTPRequest() {
   if (!error) {
     for (size_t i = 0; i < 24; i++) {
       prices[i] = doc["data"][i]["marketprice"];
-      hours[i] = doc["data"][i]["start_timestamp"];
+      hours[i] = (time_t)doc["data"][i]["start_timestamp"] / 1000;
     }
 
     float swapPrices;
