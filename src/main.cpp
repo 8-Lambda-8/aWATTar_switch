@@ -127,8 +127,12 @@ void makeHTTPRequest() {
     }
 
     for (size_t i = 0; i < 24; i++) {
-      Serial.printf("%02i: %02.2f %lli\n", i, prices[i], hours[i]);
+      tm tmx;
+      localtime_r(&hours[i], &tmx);
+      Serial.printf("%02d: %06.2f  ", i, prices[i]);
+      printTime(tmx);
     }
+    Serial.println();
 
   } else {
     Serial.print(F("deserializeJson() failed: "));
