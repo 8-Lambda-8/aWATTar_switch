@@ -11,6 +11,9 @@ WiFiClientSecure client;
 
 void makeHTTPRequest();
 
+uint64_t hours[24];
+float prices[24];
+
 void setup() {
   Serial.begin(115200);
 
@@ -89,6 +92,31 @@ void makeHTTPRequest() {
   DeserializationError error = deserializeJson(doc, client);
 
   if (!error) {
+    for (size_t i = 0; i < 24; i++) {
+      prices[i] = doc["data"][i]["marketprice"];
+      hours[i] = doc["data"][i]["start_timestamp"];
+    }
+
+    float swapPrices;
+    uint64_t swapHours;
+    for (size_t i = 0; i < 24; i++) {
+      for (size_t j = i + 1; j < 24; j++) {
+        if (prices[i] > prices[j]) {
+          swapPrices = prices[i];
+          prices[i] = prices[j];
+          prices[j] = swapPrices;
+
+          swapHours = hours[i];
+          hours[i] = hours[j];
+          hours[j] = swapHours;
+        }
+      }
+    }
+
+    for (size_t i = 0; i < 24; i++) {
+      Serial.printf("%02i: %02.2f %lli\n", i, prices[i], hours[i]);
+    }
+
   } else {
     Serial.print(F("deserializeJson() failed: "));
     Serial.println(error.f_str());
