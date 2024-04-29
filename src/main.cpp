@@ -2,6 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
+#include <time.h>
 
 #include "wifiPasswd.h"
 
@@ -9,7 +10,18 @@ WiFiClientSecure client;
 
 #define HOST "api.awattar.at"
 
+#define MY_NTP_SERVER "at.pool.ntp.org"
+#define MY_TZ "CET-1CEST,M3.5.0/02,M10.5.0/03"
+
+time_t now;
+tm tim;
+
 void makeHTTPRequest();
+
+void printTime(tm time) {
+  Serial.printf("%04d-%02d-%02d %02d:%02d:%02d\n", time.tm_year + 1900, time.tm_mon + 1, time.tm_mday,
+                time.tm_hour, time.tm_min, time.tm_sec);
+}
 
 uint64_t hours[24];
 float prices[24];
@@ -33,6 +45,7 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
+  configTime(MY_TZ, MY_NTP_SERVER);
   client.setInsecure();
 
   makeHTTPRequest();
@@ -125,5 +138,12 @@ void makeHTTPRequest() {
 }
 
 void loop() {
+  // update Time
+  time(&now);
+  localtime_r(&now, &tim);
 
+  printTime(tim);
+
+  // wait 1 min
+  delay(60 * 1000);
 }
