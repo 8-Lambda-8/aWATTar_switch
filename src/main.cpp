@@ -148,6 +148,11 @@ void loop() {
 
   printTime(tim);
 
+  // update JSON
+  if (tim.tm_min == 0) {
+    makeHTTPRequest();
+  }
+
   // wait 1 min
   delay(60 * 1000);
 }
