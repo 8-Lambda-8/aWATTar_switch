@@ -160,6 +160,14 @@ void loop() {
   // update JSON
   if (tim.tm_min == 0) {
     makeHTTPRequest();
+    Serial.println("cheapest 5:");
+    for (size_t i = 0; i < 5; i++) {
+      tm tmx;
+      localtime_r(&hours[i], &tmx);
+
+      Serial.printf("%06.2f  ", prices[i]);
+      printTime(tmx);
+    }
   }
 
   // Switch
