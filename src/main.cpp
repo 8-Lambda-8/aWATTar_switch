@@ -41,6 +41,9 @@ void SwitchRelay(uint8_t x, boolean b) { digitalWrite(RelayPins[x], b); }
 time_t hours[24];
 float prices[24];
 
+time_t hours_[24];
+float prices_[24];
+
 void setup() {
   Serial.begin(115200);
 
@@ -99,6 +102,66 @@ void setup() {
   client.setInsecure();
 
   makeHTTPRequest();
+}
+
+void drawDiagram() {
+  float range = prices[23] - prices[0];
+  uint8_t zeroLine = 30 * (prices[23] / range);
+  if (prices[0] > 0) {
+    range = prices[23];
+    zeroLine = 30;
+  }
+  zeroLine++;
+
+  Serial.printf("pmin %5.2f\n", prices[0]);
+  Serial.printf("pmax %5.2f\n", prices[23]);
+
+  Serial.printf("range %5.2f\n", range);
+  Serial.printf("zero %03d\n", zeroLine);
+
+  float scale = 30.0 / range;
+  Serial.printf("Scale %5.2f\n", scale);
+
+  display.clearDisplay();
+  display.drawLine(0, 32, 128, 32, 1);
+  display.drawLine(0, 44, 128, 44, 1);
+  for (size_t i = 0; i < 128; i += 2) display.drawPixel(i, zeroLine, 1);
+
+  display.setTextSize(1);
+  for (size_t i = 0; i < 24; i++) {
+    display.drawLine(4 + i * 5, zeroLine - prices_[i] * scale, 8 + i * 5,
+                     zeroLine - prices_[i] * scale, 1);
+
+    if (now > hours_[i] && now < (hours_[i] + 3600)) {  // current Hour
+      for (size_t j = 4; j < 9; j++)
+        display.drawLine(j + i * 5, zeroLine - prices_[i] * scale, j + i * 5, zeroLine, 1);
+
+      display.drawLine(6 + i * 5, 33, 6 + i * 5, 43, 1);
+
+      display.setTextSize(2);
+      display.setCursor(20, 50);
+      display.printf("%05.2f", prices[i]);
+      display.setTextSize(1);
+      display.print("ct/kWh");
+    } else
+      display.drawLine(6 + i * 5, zeroLine - prices_[i] * scale, 6 + i * 5, zeroLine, 1);
+
+    for (size_t j = 0; j < 5; j++)  // cheapest hours
+      if (prices_[i] == prices[j]) {
+        display.drawLine(4 + i * 5, 43, 8 + i * 5, 43, 1);
+        display.drawLine(4 + i * 5, 42, 8 + i * 5, 42, 1);
+      }
+
+    display.drawPixel(6 + i * 5, 33, 1);
+
+    if (i % 3 == 0) {
+      display.setCursor(1 + i * 5, 35);
+      tm tmx;
+      localtime_r(&hours_[i], &tmx);
+      display.printf("%02d", tmx.tm_hour);
+    }
+  }
+  display.display();
 }
 
 void makeHTTPRequest() {
@@ -160,6 +223,9 @@ void makeHTTPRequest() {
       hours[i] = (time_t)doc["data"][i]["start_timestamp"] / 1000;
     }
 
+    memcpy(prices_, prices, sizeof(float) * 24);
+    memcpy(hours_, hours, sizeof(time_t) * 24);
+
     float swapPrices;
     uint64_t swapHours;
     for (size_t i = 0; i < 24; i++) {
@@ -211,6 +277,8 @@ void loop() {
     }
   }
 
+  drawDiagram();
+
   // Switch
   bool on = false;
   for (size_t i = 0; i < 5; i++) {
@@ -220,20 +288,6 @@ void loop() {
   }
   SwitchRelay(0, on);
   SwitchRelay(1, on);
-
-  for (size_t i = 0; i < 24; i++) {
-    if (now > hours[i] && now < (hours[i] + 3600)) {
-      display.clearDisplay();
-      display.setTextSize(2);
-      display.setCursor(0, 8);
-      display.printf("%02d-%02d %02d:", tim.tm_mon + 1, tim.tm_mday, tim.tm_hour);
-      display.setCursor(0, 30);
-      display.printf("%05.2f",prices[i]);
-      display.setTextSize(1);
-      display.print("ct/kWh");
-      display.display();
-    }
-  }
 
   // wait 1 min
   delay(60 * 1000);
