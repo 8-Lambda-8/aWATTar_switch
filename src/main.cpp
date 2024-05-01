@@ -65,7 +65,7 @@ void setup() {
 
   delay(20);
   display.clearDisplay();
-  display.setCursor(0, 8);
+  display.setCursor(0, 0);
   display.printf("connect to\n WiFi\n\"%s\"\n", ssid);
   display.display();
   display.setTextSize(1);
@@ -85,6 +85,7 @@ void setup() {
     delay(500);
     Serial.print(".");
     display.print(".");
+    display.display();
   }
   Serial.println("");
   Serial.print("Connected to ");
@@ -93,7 +94,7 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   display.clearDisplay();
-  display.setTextSize(1);
+  display.setTextSize(2);
   display.setCursor(0, 8);
   display.print("connected\nIP:\n");
   display.print(WiFi.localIP());
