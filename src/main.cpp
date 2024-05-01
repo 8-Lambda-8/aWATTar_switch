@@ -101,6 +101,19 @@ void setup() {
   configTime(MY_TZ, MY_NTP_SERVER);
   client.setInsecure();
 
+  display.clearDisplay();
+  display.setCursor(0, 8);
+  display.print("get Time\n");
+  display.display();
+  display.setTextSize(1);
+
+  while (now < 1000) {
+    delay(1000);
+    time(&now);
+    display.print(".");
+    display.display();
+  }
+
   makeHTTPRequest();
 }
 
