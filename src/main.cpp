@@ -91,12 +91,13 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  delay(20);
   display.clearDisplay();
   display.setCursor(0, 8);
   display.print("connected\nIP:\n");
   display.print(WiFi.localIP());
   display.display();
+
+  delay(3000);
 
   configTime(MY_TZ, MY_NTP_SERVER);
   client.setInsecure();
