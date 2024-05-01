@@ -4,6 +4,10 @@
 #include <ArduinoJson.h>
 #include <time.h>
 
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
 #include "wifiPasswd.h"
 
 WiFiClientSecure client;
@@ -15,6 +19,13 @@ WiFiClientSecure client;
 
 time_t now;
 tm tim;
+
+// DISPLAY
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define SCREEN_ADDRESS 0x3c
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 const uint8_t RelayPins[] = {14, 12};
 
@@ -32,6 +43,29 @@ float prices[24];
 
 void setup() {
   Serial.begin(115200);
+
+  //init Diplay
+  Wire.begin(5,4);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+  }
+  
+  display.clearDisplay();
+  display.display();
+  delay(20);
+
+  display.setTextColor(WHITE);
+  display.setTextSize(2);
+  display.setCursor(0, 8);
+  display.print("Startup...");
+  display.display();
+
+  delay(20);
+  display.clearDisplay();
+  display.setCursor(0, 8);
+  display.print("connect\nWiFi...\n");
+  display.print(ssid);
+  display.display();
 
   for (uint8_t i = 0; i < sizeof(RelayPins); i++) {
     pinMode(RelayPins[i], OUTPUT);
@@ -53,6 +87,13 @@ void setup() {
   Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  delay(20);
+  display.clearDisplay();
+  display.setCursor(0, 8);
+  display.print("connected\nIP:\n");
+  display.print(WiFi.localIP());
+  display.display();
 
   configTime(MY_TZ, MY_NTP_SERVER);
   client.setInsecure();
@@ -179,6 +220,20 @@ void loop() {
   }
   SwitchRelay(0, on);
   SwitchRelay(1, on);
+
+  for (size_t i = 0; i < 24; i++) {
+    if (now > hours[i] && now < (hours[i] + 3600)) {
+      display.clearDisplay();
+      display.setTextSize(2);
+      display.setCursor(0, 8);
+      display.printf("%02d-%02d %02d:", tim.tm_mon + 1, tim.tm_mday, tim.tm_hour);
+      display.setCursor(0, 30);
+      display.printf("%05.2f",prices[i]);
+      display.setTextSize(1);
+      display.print("ct/kWh");
+      display.display();
+    }
+  }
 
   // wait 1 min
   delay(60 * 1000);
