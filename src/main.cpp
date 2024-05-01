@@ -11,7 +11,7 @@
 WiFiManager wm;
 WiFiManagerParameter custom_field;
 WiFiClientSecure client;
-
+#define NAME "aWATTar_SWITCH"
 #define HOST "api.awattar.at"
 
 #define MY_NTP_SERVER "at.pool.ntp.org"
@@ -70,6 +70,7 @@ void setup() {
 
   // Connect to the WiFI
   WiFi.mode(WIFI_STA);
+  wm.setCustomHeadElement(NAME);
   wm.setConfigPortalBlocking(false);
 
   std::vector<const char*> menu = {"wifi", "info", "sep", "restart", "exit"};
@@ -80,13 +81,14 @@ void setup() {
 
   wm.setConfigPortalTimeout(30);
   wm.setAPClientCheck(true);
+  wm.setHostname(NAME);
 
   display.clearDisplay();
   display.setCursor(0, 0);
   display.print("Connect ToWeb Portalfor WiFi  Config");
   display.display();
 
-  while (!wm.autoConnect("aWATTar_SWITCH")) {
+  while (!wm.autoConnect(NAME)) {
     // Connection Failed
     wm.process();
   }
