@@ -32,8 +32,8 @@ const uint8_t RelayPins[] = {14, 12};
 void makeHTTPRequest();
 
 void printTime(tm time) {
-  Serial.printf("%04d-%02d-%02d %02d:%02d:%02d\n", time.tm_year + 1900, time.tm_mon + 1, time.tm_mday,
-                time.tm_hour, time.tm_min, time.tm_sec);
+  Serial.printf("%04d-%02d-%02d %02d:%02d:%02d\n", time.tm_year + 1900, time.tm_mon + 1,
+                time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec);
 }
 
 void SwitchRelay(uint8_t x, boolean b) { digitalWrite(RelayPins[x], b); }
@@ -47,12 +47,12 @@ float prices_[24];
 void setup() {
   Serial.begin(115200);
 
-  //init Diplay
-  Wire.begin(5,4);
-  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+  // init Diplay
+  Wire.begin(5, 4);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
   }
-  
+
   display.clearDisplay();
   display.display();
   delay(20);
