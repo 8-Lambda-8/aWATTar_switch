@@ -189,7 +189,9 @@ void makeHTTPRequest() {
 
   // Send HTTP request
   client.print(F("GET "));
-  client.print("/v1/marketdata");
+  client.print("/v1/marketdata?start=");
+  client.print(now - (now % (24 * 60 * 60)) - 7200);
+  client.print("000");
   client.println(F(" HTTP/1.1"));
 
   // Headers
