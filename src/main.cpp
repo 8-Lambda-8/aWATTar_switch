@@ -11,6 +11,24 @@
 WiFiManager wm;
 WiFiManagerParameter custom_field;
 WiFiClientSecure client;
+
+const char TypeSelect_str[] PROGMEM =
+    "<label for='%s'>Type</label><select id='%s'><option "
+    "value='c'>Cheap</option><option value='e'>Expensive</option></select>";
+
+class TypeSelect : public WiFiManagerParameter {
+ public:
+  TypeSelect(const char *id) : WiFiManagerParameter("") {
+    const char *buff = (const char *)malloc(sizeof(TypeSelect_str) + sizeof(id) * 2 + 1);
+    sprintf((char *)buff, TypeSelect_str, id, id);
+    init(NULL, NULL, NULL, 1, buff, WFM_LABEL_BEFORE);
+  }
+
+  char getValue() { return WiFiManagerParameter::getValue()[0]; }
+};
+
+const char numberInput[] PROGMEM = " type=\"number\" min=\"1\" max=\"23\" ";
+
 #define NAME "aWATTar_SWITCH"
 #define HOST "api.awattar.at"
 
@@ -73,7 +91,23 @@ void setup() {
   wm.setCustomHeadElement(NAME);
   wm.setConfigPortalBlocking(false);
 
-  std::vector<const char*> menu = {"wifi", "info", "sep", "restart", "exit"};
+  WiFiManagerParameter R1_head("<h2>Relais 1:</h2>");
+  TypeSelect R1_type("R1_type");
+  WiFiManagerParameter R1_hours("R1_hours", "Hours", "5", 2, (const char *)FPSTR(numberInput));
+
+  WiFiManagerParameter R2_head("<h2>Relais 2:</h2>");
+  TypeSelect R2_type("R2_type");
+  WiFiManagerParameter R2_hours("R2_hours", "Hours", "5", 2, (const char *)FPSTR(numberInput));
+
+  wm.addParameter(&R1_head);
+  wm.addParameter(&R1_type);
+  wm.addParameter(&R1_hours);
+  wm.addParameter(&R2_head);
+  wm.addParameter(&R2_type);
+  wm.addParameter(&R2_hours);
+  wm.setSaveParamsCallback(saveParamCallback);
+
+  std::vector<const char *> menu = {"wifi", "info", "param", "sep", "restart", "exit"};
   wm.setMenu(menu);
 
   // set dark theme
