@@ -156,7 +156,7 @@ void makeHTTPRequest() {
 
   if (!error) {
     for (size_t i = 0; i < 24; i++) {
-      prices[i] = doc["data"][i]["marketprice"];
+      prices[i] = (float)doc["data"][i]["marketprice"] / 10 * 1.03 + 1.5;
       hours[i] = (time_t)doc["data"][i]["start_timestamp"] / 1000;
     }
 
@@ -179,7 +179,7 @@ void makeHTTPRequest() {
     for (size_t i = 0; i < 24; i++) {
       tm tmx;
       localtime_r(&hours[i], &tmx);
-      Serial.printf("%02d: %06.2f  ", i, prices[i]);
+      Serial.printf("%02d: %05.2f  ", i, prices[i]);
       printTime(tmx);
     }
     Serial.println();
@@ -206,7 +206,7 @@ void loop() {
       tm tmx;
       localtime_r(&hours[i], &tmx);
 
-      Serial.printf("%06.2f  ", prices[i]);
+      Serial.printf("%05.2f  ", prices[i]);
       printTime(tmx);
     }
   }
