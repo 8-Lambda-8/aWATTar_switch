@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
+#include <WiFiManager.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 #include <time.h>
@@ -8,8 +8,8 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#include "wifiPasswd.h"
-
+WiFiManager wm;
+WiFiManagerParameter custom_field;
 WiFiClientSecure client;
 
 #define HOST "api.awattar.at"
@@ -63,13 +63,6 @@ void setup() {
   display.print("Startup...");
   display.display();
 
-  delay(20);
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.printf("connect to\n WiFi\n\"%s\"\n", ssid);
-  display.display();
-  display.setTextSize(1);
-
   for (uint8_t i = 0; i < sizeof(RelayPins); i++) {
     pinMode(RelayPins[i], OUTPUT);
     SwitchRelay(i, false);
@@ -77,26 +70,44 @@ void setup() {
 
   // Connect to the WiFI
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  Serial.println("");
+  wm.setConfigPortalBlocking(false);
 
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-    display.print(".");
-    display.display();
+  std::vector<const char*> menu = {"wifi", "info", "sep", "restart", "exit"};
+  wm.setMenu(menu);
+
+  // set dark theme
+  wm.setClass("invert");
+
+  wm.setConfigPortalTimeout(30);
+  wm.setAPClientCheck(true);
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.print("Connect ToWeb Portalfor WiFi  Config");
+  display.display();
+
+  while (!wm.autoConnect("aWATTar_SWITCH")) {
+    // Connection Failed
+    wm.process();
   }
+  wm.startWebPortal();
+
+  // connected
   Serial.println("");
   Serial.print("Connected to ");
-  Serial.println(ssid);
+  Serial.println(WiFi.SSID());
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
   display.clearDisplay();
-  display.setTextSize(2);
+  display.setTextSize(1);
   display.setCursor(0, 8);
-  display.print("connected\nIP:\n");
+  display.print("Connected To:\n\"");
+  display.setTextSize(2);
+  display.print(WiFi.SSID());
+  display.setTextSize(1);
+  display.print("\"\n\n\nIP: \n");
+  display.setTextSize(2);
   display.print(WiFi.localIP());
   display.display();
 
@@ -111,8 +122,12 @@ void setup() {
   display.display();
   display.setTextSize(1);
 
+  uint64_t timer = 0;
   while (now < 1000) {
-    delay(1000);
+    wm.process();
+    if (millis() - timer < 1000) continue;
+    timer = millis();
+
     time(&now);
     display.print(".");
     display.display();
@@ -276,12 +291,16 @@ void makeHTTPRequest() {
   }
 }
 
+uint64_t timer = 30000;
 void loop() {
+  wm.process();
+
   // update Time
   time(&now);
   localtime_r(&now, &tim);
 
-  printTime(tim);
+  if (millis() - timer < 30000) return;
+  timer = millis();
 
   // update JSON
   if (tim.tm_min == 0) {
@@ -307,7 +326,4 @@ void loop() {
   }
   SwitchRelay(0, on);
   SwitchRelay(1, on);
-
-  // wait 1 min
-  delay(60 * 1000);
 }
